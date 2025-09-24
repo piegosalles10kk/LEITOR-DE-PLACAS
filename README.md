@@ -13,7 +13,6 @@ Sistema inteligente para detecção e reconhecimento automático de placas veicu
 - [Deploy](#deploy)
 - [API Endpoints](#api-endpoints)
 - [Estrutura do Projeto](#estrutura-do-projeto)
-- [Contribuição](#contribuição)
 
 ## 🎯 Sobre o Projeto
 
@@ -224,18 +223,9 @@ locar-vision/
 - **Formato Antigo**: ABC1234 (3 letras + 4 números)
 - **Formato Mercosul**: ABC1D23 (3 letras + 1 número + 1 letra + 2 números)
 
-## 🤝 Contribuição
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
 
 ## 📝 Notas Importantes
 
-- As credenciais do Google Cloud estão expostas no código para fins de demonstração. **Em produção, use variáveis de ambiente!**
-- Os modelos YOLO não estão incluídos no repositório e devem ser treinados ou obtidos separadamente
 - O sistema foi otimizado para placas brasileiras, mas pode ser adaptado para outros países
 - A aplicação redimensiona a imagem resultado para 500x500 pixels por padrão
 
