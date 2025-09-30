@@ -1,6 +1,7 @@
 # Ignorar o ambiente virtual
 ambiente/
 
+models/chave.json
 chaves.json
 # Ignorar arquivos temporários do Python
 *.pyc
