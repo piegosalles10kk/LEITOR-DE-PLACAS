@@ -3,66 +3,311 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Envio de Mídia</title>
+    <title>Leitor de Placas (OCR) | Envio de Mídia</title>
+    <style>
+        /* Estilos Globais */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Container Principal */
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        /* Título */
+        h1 {
+            color: #007bff;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        /* Formulário e Botão */
+        #uploadForm {
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        
+        /* Contêiner de Preview */
+        #previewContainer {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px dashed #ccc;
+            display: inline-block;
+            max-width: 100%;
+            text-align: center;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            max-height: 300px; /* Limita a altura para o preview */
+            display: block;
+            margin: 0 auto;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 15px auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            width: 80%;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        /* Área de Resultados */
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #e9ecef;
+            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #result img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 15px;
+            display: block;
+        }
+        
+        /* Estilos para o agrupamento de veículo */
+        .veiculo-info {
+            border: 1px solid #007bff;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background-color: #f8faff;
+        }
+        
+        .veiculo-info h4 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+
+        .crops-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .crops-container .carro-crop img {
+            max-width: 300px;
+            height: auto;
+            border: 2px solid #343a40;
+        }
+        
+        .crops-container .placa-crop img {
+            width: 150px;
+            height: auto;
+            border: 2px solid #28a745;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <h1>Envio de Mídia</h1>
-    <form id="uploadForm">
-        <label for="apiUrl">Endereço da API:</label>
-        <input type="text" id="apiUrl" name="apiUrl" value="https://d2a0-200-159-51-241.ngrok-free.app/upload" required>
-        <br><br>
-        <label for="fileInput">Escolha um arquivo (imagem):</label>
-        <input type="file" id="fileInput" name="file" accept="image/*" required>
-        <br><br>
-        <button type="submit">Enviar Arquivo</button>
-    </form>
-    <div id="result"></div>
+    <div class="container">
+        <h1>Análise de Imagem para Placas (OCR)</h1>
+
+        <form id="uploadForm">
+            <label for="fileInput">
+                <p><strong>Selecione uma imagem para detecção:</strong></p>
+            </label>
+            <input type="file" id="fileInput" name="file" accept="image/*" required>
+            
+            <div id="previewContainer" style="display:none;">
+                <p style="font-style: italic;">Preview da Imagem:</p>
+                <img id="imagePreview" src="#" alt="Preview da Imagem" />
+            </div>
+            <button type="submit">Enviar e Processar Imagem</button>
+        </form>
+
+        <div id="result">
+            <p>Aguardando o envio da imagem...</p>
+        </div>
+    </div>
     
     <script>
+        // Função para mostrar o preview da imagem
+        function showImagePreview(input) {
+            const preview = document.getElementById('imagePreview');
+            const container = document.getElementById('previewContainer');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    container.style.display = 'inline-block'; // Exibe o container de preview
+                };
+
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.src = '#';
+                container.style.display = 'none'; // Esconde se não houver arquivo
+            }
+        }
+        
+        // 🚨 NOVO: Event listener para o campo de arquivo
+        document.getElementById('fileInput').addEventListener('change', function() {
+            showImagePreview(this);
+        });
+
         document.getElementById('uploadForm').addEventListener('submit', async function(event) {
-            event.preventDefault(); // Impede o envio padrão do formulário
-            const apiUrl = document.getElementById('apiUrl').value; // Obtém a URL da API
-            const formData = new FormData();
-            const file = document.getElementById('fileInput').files[0];
+            event.preventDefault(); 
+            
+            // --- URLS FIXAS PARA O BACKEND ---
+            const apiUrl = "http://localhost:5000/upload"; 
+            const baseUrlFlask = "http://localhost:5000"; 
+            // ---------------------------------
+            
+            const resultDiv = document.getElementById('result');
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            // Limpa e exibe mensagem de carregamento
+            resultDiv.innerHTML = '<p style="color:#007bff;">Enviando e processando... Por favor, aguarde.</p>';
+
             if (!file) {
-                console.error('Nenhum arquivo selecionado');
-                document.getElementById('result').innerHTML = '<p>Erro: Nenhum arquivo selecionado.</p>';
+                resultDiv.innerHTML = '<p class="error-message">Erro: Nenhum arquivo selecionado.</p>';
                 return;
             }
-            console.log('Arquivo selecionado:', file);
-            formData.append('file', file); // Adiciona o arquivo ao FormData
+
+            const formData = new FormData();
+            formData.append('file', file);
+
             try {
-                console.log('Enviando para a API:', apiUrl);
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     body: formData
                 });
+
                 const result = await response.json();
-                console.log('Resposta da API:', result);
+                
                 if (response.ok) {
-                    // Adiciona timestamp à URL da imagem para evitar cache
                     const timestamp = new Date().getTime();
-                    const imageUrl = `${result.imagem_resultado}?t=${timestamp}`;
-                    // Exibir número de veículos e placas detectadas
-                    let html = `
-                        <p>Número de veículos identificados: ${result.numero_veiculos}</p>
-                        <p>Placas lidas: ${result.placas.length > 0 ? result.placas.join(', ') : 'Nenhuma placa identificada.'}</p>
-                        <img src="${imageUrl}" alt="Imagem processada" width="500" height="500"><br><br>
-                    `;
-                    // Exibir crops das placas
-                    if (result.crops_base64 && result.crops_base64.length > 0) {
-                        html += '<p>Crops das placas:</p>';
-                        for (const cropBase64 of result.crops_base64) {
-                            html += `<img src="data:image/jpeg;base64,${cropBase64}" alt="Placa lida:" width="150">`;
+                    let imageUrl = '';
+                    
+                    if (result.imagem_resultado) {
+                        let imagePath = result.imagem_resultado;
+                        
+                        // CORREÇÃO DE URL: Substitui barra invertida por barra normal (Windows path fix)
+                        imagePath = imagePath.replace(/\\/g, '/'); 
+                        
+                        if (!imagePath.startsWith('http')) {
+                            if (imagePath.startsWith('/')) imagePath = imagePath.substring(1);
+                            imageUrl = baseUrlFlask + '/' + imagePath;
+                        } else {
+                            imageUrl = imagePath;
                         }
+                        
+                        imageUrl += '?t=' + timestamp;
                     }
-                    document.getElementById('result').innerHTML = html;
+                    
+                    // 1. Constrói o HTML inicial (Resumo)
+                    let html = 
+                        `<h3>&#x2705; Processamento Concluído</h3>
+                        <p><strong>Veículos identificados:</strong> ${result.numero_veiculos || 0}</p>`;
+                    
+                    
+                    // 2. EXIBE IMAGEM PRINCIPAL (AGORA AQUI)
+                    if (imageUrl) {
+                        html += '<hr>';
+                        html += 
+                            `<p><strong>Resultado Visual na Imagem Completa:</strong></p>
+                            <img src="${imageUrl}" alt="Imagem processada" style="max-width: 100%; height: auto; margin-bottom: 15px;"><br>`;
+                        html += '<hr>';
+                    }
+                    
+                    // 3. Iterar sobre os veículos (DETALHES)
+                    if (result.veiculos && result.veiculos.length > 0) {
+                        html += '<h4>Detalhes por Veículo:</h4>';
+                        
+                        result.veiculos.forEach((veiculo, index) => {
+                            const placa = veiculo.placa || 'N/A';
+                            const carroCrop = veiculo.crop_carro_base64;
+                            const placaCrop = veiculo.crop_placa_base64;
+                            
+                            html += '<div class="veiculo-info">';
+                            
+                            // Usando Template String DENTRO da função JS onde 'index' existe
+                            html += `<h4>Veículo ${index + 1}: Placa ${placa}</h4>`;
+                            
+                            html += '<div class="crops-container">';
+                            
+                            // Crop do Carro
+                            if (carroCrop) {
+                                html += '<div class="carro-crop">';
+                                html += '<p><strong>Recorte do Veículo:</strong></p>';
+                                html += `<img src="data:image/jpeg;base64,${carroCrop}" alt="Recorte do carro">`;
+                                html += '</div>';
+                            }
+                            
+                            // Crop da Placa
+                            if (placaCrop) {
+                                html += '<div class="placa-crop">';
+                                html += '<p><strong>Recorte da Placa:</strong></p>';
+                                html += `<img src="data:image/jpeg;base64,${placaCrop}" alt="Recorte da placa">`;
+                                html += '</div>';
+                            }
+                            
+                            html += '</div>'; // Fecha crops-container
+                            html += '</div>'; // Fecha veiculo-info
+                        });
+                    }
+                    
+                    resultDiv.innerHTML = html;
+
                 } else {
-                    document.getElementById('result').innerHTML = `<p>Erro ao enviar arquivo: ${result.error}</p>`;
+                    const errorMessage = result.error || JSON.stringify(result);
+                    resultDiv.innerHTML = `<p class="error-message">❌ Erro no Servidor (${response.status}): ${errorMessage}</p>`;
                 }
+
             } catch (error) {
                 console.error('Erro ao enviar arquivo:', error);
-                document.getElementById('result').innerHTML = `<p>Erro ao enviar arquivo: ${error.message}</p>`;
+                resultDiv.innerHTML = `<p class="error-message">🚨 Erro de Conexão: O servidor não pôde ser alcançado. (${error.message})</p>`;
             }
         });
     </script>
