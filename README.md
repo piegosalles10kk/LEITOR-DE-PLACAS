@@ -2,18 +2,6 @@
 
 Sistema inteligente para detecção e reconhecimento automático de placas veiculares em imagens utilizando YOLO e Google Cloud Vision API.
 
-## 📋 Índice
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Funcionalidades](#funcionalidades)
-- [Tecnologias Utilizadas](#tecnologias-utilizadas)
-- [Pré-requisitos](#pré-requisitos)
-- [Instalação](#instalação)
-- [Configuração](#configuração)
-- [Como Usar](#como-usar)
-- [Deploy](#deploy)
-- [API Endpoints](#api-endpoints)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-
 ## 🎯 Sobre o Projeto
 
 O Locar Vision é um sistema de reconhecimento automático de placas veiculares (ALPR - Automatic License Plate Recognition) que combina modelos YOLO para detecção de veículos e placas com a Google Cloud Vision API para OCR (reconhecimento óptico de caracteres).
