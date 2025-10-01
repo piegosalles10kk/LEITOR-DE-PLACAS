@@ -10,6 +10,7 @@ from google.cloud import vision
 import re
 
 # Caminho do arquivo de chave do Google
+# OBS: O Flask precisa da localização correta. Se o script estiver no raiz, use o caminho relativo.
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "models/chave.json"
 
 # Inicialização dos modelos YOLO
@@ -17,6 +18,8 @@ model_carros = YOLO('models/yolov8_carros.pt')
 model_placas = YOLO('models/yolov8_placas.pt')
 
 # Configuração da aplicação Flask
+# Definimos o diretório raiz para os templates/arquivos estáticos servidos (opcional, mas bom para organização)
+# O root_path é o caminho do diretório do script atual.
 app = Flask(__name__, static_url_path='/uploads', static_folder='uploads')
 CORS(app)
 
@@ -25,7 +28,11 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 FILENAME = 'imagem_atual.jpg'
 
-# --- Funções Auxiliares (Não alteradas) ---
+# O diretório onde o index.html está (assumimos que é o mesmo que o script principal)
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+# --- Funções Auxiliares (Omitidas para brevidade, pois não foram alteradas) ---
 
 class ObjectDetector:
     def __init__(self, model_carros_path='models/yolov8_carros.pt', model_placas_path='models/yolov8_placas.pt'):
@@ -40,9 +47,7 @@ class ObjectDetector:
         resultados = self.model_placas(crop_imagem)
         return resultados[0].boxes.xyxy
 
-# Função para converter a imagem cropada em base64
 def crop_para_base64(crop_imagem):
-    # Garantir que a imagem tem pelo menos 1 pixel de altura/largura
     if crop_imagem.shape[0] == 0 or crop_imagem.shape[1] == 0:
         return None
     retval, buffer = cv2.imencode('.jpg', crop_imagem)
@@ -71,52 +76,36 @@ def enviar_para_google_vision(crop_imagem):
 
 object_detector = ObjectDetector()
 
-# 🚨 ALTERAÇÃO CHAVE: Modificando a saída para agrupar os resultados por carro
 def processar_imagem(imagem):
-    # Lista que vai conter todos os dados (carro, placa, crops)
     veiculos_detectados = []
-
-    # Detecta os carros na imagem
     caixas_carros = object_detector.detectar_carros(imagem)
 
     for i, carro in enumerate(caixas_carros):
         x1, y1, x2, y2 = map(int, carro)
         crop_carro = imagem[y1:y2, x1:x2]
-        
-        # Desenha a caixa do carro na imagem principal
         cv2.rectangle(imagem, (x1, y1), (x2, y2), (0, 0, 255), 2)
-        
-        # Converte o crop do carro para base64
         crop_carro_base64 = crop_para_base64(crop_carro)
         
         placa_identificada = None
         crop_placa_base64 = None
 
-        # Detecta as placas no crop do carro
         caixas_placas = object_detector.detectar_placas(crop_carro)
 
         if caixas_placas is not None and len(caixas_placas) > 0:
-            # Pegamos apenas a primeira placa encontrada por carro para simplificar
             placa = caixas_placas[0] 
             px1, py1, px2, py2 = map(int, placa)
             
             crop_placa = crop_carro[py1:py2, px1:px2]
             
-            # Envia a placa para o Google Vision e processa o texto detectado
             texto_placa = enviar_para_google_vision(crop_placa)
             
             if texto_placa:
                 placa_identificada = texto_placa
                 crop_placa_base64 = crop_para_base64(crop_placa)
 
-                # Desenha a caixa da placa na imagem original
                 cv2.rectangle(imagem, (px1 + x1, py1 + y1), (px2 + x1, py2 + y1), (0, 255, 0), 2)
-                
-                # Opcional: Adicionar a placa na imagem original (para visualização)
                 cv2.putText(imagem, placa_identificada, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
 
-
-        # Adiciona o resultado na lista de veículos
         if placa_identificada:
             veiculos_detectados.append({
                 'placa': placa_identificada,
@@ -125,6 +114,13 @@ def processar_imagem(imagem):
             })
     
     return veiculos_detectados, imagem
+
+# --- ROTA RAIZ (Nova) ---
+@app.route('/')
+def serve_index():
+    """Serve o arquivo index.html que está no diretório raiz do script."""
+    # Usamos send_from_directory para servir o arquivo
+    return send_from_directory(ROOT_DIR, 'index.html')
 
 
 # Endpoint da API para upload de imagem
@@ -142,7 +138,6 @@ def upload_file():
     file.save(filepath)
 
     imagem = cv2.imread(filepath)
-    # 🚨 ALTERAÇÃO: Receber a lista de veículos e a imagem resultado
     veiculos_detectados, imagem_resultado = processar_imagem(imagem)
     
     imagem_resultado = cv2.resize(imagem_resultado, (500, 500))
@@ -151,14 +146,12 @@ def upload_file():
 
     cv2.imwrite(resultado_path_sistema, imagem_resultado)
     
-    # Retorna o caminho limpo (URL-friendly)
     resultado_url = f"{UPLOAD_FOLDER}/{resultado_nome}"
     
-    # 🚨 ALTERAÇÃO: Retorna a lista de veículos agrupados
     return jsonify({
         'numero_veiculos': len(veiculos_detectados),
-        'veiculos': veiculos_detectados, # Lista com todos os dados agrupados
-        'placas': [v['placa'] for v in veiculos_detectados], # Lista simples de placas
+        'veiculos': veiculos_detectados, 
+        'placas': [v['placa'] for v in veiculos_detectados], 
         'imagem_resultado': resultado_url
     }), 200
 

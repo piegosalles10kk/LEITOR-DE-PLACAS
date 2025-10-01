@@ -149,7 +149,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Análise de Imagem para Placas (OCR)</h1>
+        <h1>LEITOR DE PLACAS (OCR)</h1>
 
         <form id="uploadForm">
             <label for="fileInput">
@@ -199,8 +199,8 @@
             event.preventDefault(); 
             
             // --- URLS FIXAS PARA O BACKEND ---
-            const apiUrl = "http://localhost:5000/upload"; 
-            const baseUrlFlask = "http://localhost:5000"; 
+            const apiUrl = " https://lively-giving-crayfish.ngrok-free.app/upload"; 
+            const baseUrlFlask = " https://lively-giving-crayfish.ngrok-free.app"; 
             // ---------------------------------
             
             const resultDiv = document.getElementById('result');
@@ -249,17 +249,9 @@
                     // 1. Constrói o HTML inicial (Resumo)
                     let html = 
                         `<h3>&#x2705; Processamento Concluído</h3>
-                        <p><strong>Veículos identificados:</strong> ${result.numero_veiculos || 0}</p>`;
+                        <p><strong>Placas identificadas:</strong> ${result.numero_veiculos || 0}</p>`;
                     
                     
-                    // 2. EXIBE IMAGEM PRINCIPAL (AGORA AQUI)
-                    if (imageUrl) {
-                        html += '<hr>';
-                        html += 
-                            `<p><strong>Resultado Visual na Imagem Completa:</strong></p>
-                            <img src="${imageUrl}" alt="Imagem processada" style="max-width: 100%; height: auto; margin-bottom: 15px;"><br>`;
-                        html += '<hr>';
-                    }
                     
                     // 3. Iterar sobre os veículos (DETALHES)
                     if (result.veiculos && result.veiculos.length > 0) {
